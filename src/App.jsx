@@ -1,14 +1,9 @@
-import { useState, useEffect } from 'react'
-import { initializeApp } from 'firebase/app'
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged 
-} from 'firebase/auth'
+import { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// TU CONFIG REAL DE FIREBASE - YA ESTÁ LISTO
+// CONFIGURACIÓN OFICIAL DE MEGASTORE 399AC
 const firebaseConfig = {
   apiKey: "AIzaSyCHw-gdVsPBZ49Yw_7c68RWBhIUfOZxSd8",
   authDomain: "megastore-399ac.firebaseapp.com",
@@ -18,9 +13,16 @@ const firebaseConfig = {
   appId: "1:51295482848:web:45237d398b2ba0d65a3185"
 };
 
+// Inicializamos Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+
+// FIX CRÍTICO: Esto obliga a Google a preguntar qué cuenta usar
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 function App() {
   const [user, setUser] = useState(null);
@@ -34,65 +36,63 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = async () => {
+  const loginGoogle = async () => {
     try {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
-      alert("Error al iniciar sesión. Revisa la consola.");
+      alert("Error al conectar con Google. Verifica que el dominio esté autorizado en Firebase.");
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
+  const logout = async () => {
+    await signOut(auth);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <h1 className="text-2xl">Cargando Megastore...</h1>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ padding: '20px' }}>Cargando MEGASTORE...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold mb-8">🔥 MEGASTORE 🔥</h1>
-      
-      {user ? (
-        <div className="text-center">
-          <img 
-            src={user.photoURL} 
-            alt="Foto de perfil" 
-            className="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-cyan-400"
-          />
-          <p className="text-xl mb-2">Bienvenido, {user.displayName}</p>
-          <p className="text-gray-400 mb-6">{user.email}</p>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc' }}>
+        <h1>MEGASTORE</h1>
+        {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src={user.photoURL} alt="perfil" style={{ width: '35px', borderRadius: '50%' }} />
+            <span>{user.displayName}</span>
+            <button onClick={logout}>Salir</button>
+          </div>
+        ) : (
           <button 
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-bold"
+            onClick={loginGoogle} 
+            style={{ background: '#4285F4', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
           >
-            Cerrar Sesión
+            Entrar con Google
+          </button>
+        )}
+      </header>
+
+      <nav style={{ margin: '20px 0', display: 'flex', gap: '20px', fontWeight: 'bold' }}>
+        <span>HOMBRE</span>
+        <span>MUJER</span>
+        <span>TECH</span>
+        <span style={{ color: '#4285F4' }}>VENDER PRODUCTO</span>
+      </nav>
+
+      <main>
+        <h2>Productos Destacados</h2>
+        <div style={{ border: '1px solid #ddd', padding: '15px', width: '250px', borderRadius: '8px' }}>
+          <h3>Parka Acolchada Premium NEXUS</h3>
+          <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>S/189.99</p>
+          <button style={{ width: '100%', padding: '10px', background: 'black', color: 'white', borderRadius: '5px' }}>
+            Agregar al carrito
           </button>
         </div>
-      ) : (
-        <div className="text-center">
-          <p className="text-xl mb-6">Inicia sesión para entrar a la tienda</p>
-          <button 
-            onClick={handleLogin}
-            className="bg-cyan-600 hover:bg-cyan-700 px-6 py-3 rounded-lg font-bold"
-          >
-            Iniciar Sesión con Google
-          </button>
-        </div>
-      )}
+      </main>
     </div>
   );
 }
 
-export default App
-// MEGASTORE DEPLOY 2026
+export default App;
+
+// MEGASTORE DEPLOY 2026 - FINAL FIX LOGIN
+                                   
